@@ -1,3 +1,22 @@
 spring:
   application:
     name: event-registration
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/event_registration
+    username: event_app
+    password: local_dev_password
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
