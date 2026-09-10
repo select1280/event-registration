@@ -1,6 +1,7 @@
 package event_registration.domain;
 
 import event_registration.domain.enums.EventStatus;
+import event_registration.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -63,6 +64,18 @@ public class Event {
         this.registrationDeadline = registrationDeadline;
         this.startsAt = startsAt;
         this.endsAt = endsAt;
+    }
+
+    public void publish(Instant now){
+        if(status != EventStatus.DRAFT){
+            throw new BusinessException("只有草稿活動可以發布");
+        }
+
+        if(!registrationDeadline.isAfter(now)){
+            throw new BusinessException("報名已截止，無法發布活動");
+        }
+
+        status = EventStatus.PUBLISHED;
     }
 
     @PrePersist

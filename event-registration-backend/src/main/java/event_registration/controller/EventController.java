@@ -49,4 +49,14 @@ public class EventController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{id}/publish")
+    public ResponseEntity<EventResponse> publishEvent(
+            @PathVariable("id") Long id
+    ){
+        EventResponse response = eventService.publishEvent(id);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

@@ -16,6 +16,8 @@ import event_registration.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Service
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
@@ -90,5 +92,17 @@ public class EventServiceImpl implements EventService {
                 result.getTotalElements(),
                 result.getTotalPages()
         );
+    }
+
+    @Override
+    @Transactional
+    public EventResponse publishEvent(Long id){
+        Event event = eventRepository.findById(id)
+                .orElseThrow( () -> new ResourceNotFoundException("找不到活動， ID :" + id)
+                );
+
+        event.publish(Instant.now());
+
+        return eventMapper.toResponse(event);
     }
 }
