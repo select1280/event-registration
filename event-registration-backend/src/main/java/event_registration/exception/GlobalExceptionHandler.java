@@ -2,6 +2,8 @@ package event_registration.exception;
 
 
 import event_registration.dto.response.ErrorResponse;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +61,30 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(response);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException exception
+    ){
+        Throwable cause = exception;
+
+        while (cause != null){
+            if(cause instanceof ConstraintViolationException violation && "uk_members_email".equals(violation.getConstraintName())
+            ){
+                ErrorResponse response = new ErrorResponse(
+                        "BUSINESS_RULE_VIOLATION",
+                        "此 Email 已被註冊",
+                        List.of()
+                );
+
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            cause = cause.getCause();
+        }
+
+        throw exception;
     }
 
 }
