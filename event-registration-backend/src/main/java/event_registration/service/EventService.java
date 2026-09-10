@@ -6,4 +6,6 @@ import event_registration.dto.response.EventResponse;
 public interface EventService {
 
     EventResponse createEvent(EventRequest eventRequest);
+
+    EventResponse getEventById(Long id);
 }
