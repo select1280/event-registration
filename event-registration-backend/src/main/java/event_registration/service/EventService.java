@@ -13,4 +13,6 @@ public interface EventService {
     PageResponse<EventResponse> getEvents(int page, int size);
 
     EventResponse publishEvent(Long id);
+
+    EventResponse updateEvent(Long id, EventRequest request);
 }

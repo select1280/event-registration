@@ -105,4 +105,26 @@ public class EventServiceImpl implements EventService {
 
         return eventMapper.toResponse(event);
     }
+
+    @Override
+    @Transactional
+    public EventResponse updateEvent(Long id, EventRequest request){
+        Event event = eventRepository.findById(id)
+                .orElseThrow( () -> new ResourceNotFoundException("找不到活動， ID:" + id)
+                );
+
+        validateEventDates(request);
+
+        event.updateDetails(
+                request.getTitle(),
+                request.getDescription(),
+                request.getLocation(),
+                request.getCapacity(),
+                request.getRegistrationDeadline(),
+                request.getStartsAt(),
+                request.getEndsAt()
+        );
+
+        return eventMapper.toResponse(event);
+    }
 }

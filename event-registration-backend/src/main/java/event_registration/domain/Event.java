@@ -78,6 +78,28 @@ public class Event {
         status = EventStatus.PUBLISHED;
     }
 
+    public void updateDetails(
+            String title,
+            String description,
+            String location,
+            Integer capacity,
+            Instant registrationDeadline,
+            Instant startsAt,
+            Instant endsAt
+    ){
+        if(status != EventStatus.DRAFT){
+            throw new BusinessException("只有草稿活動可以修改");
+        }
+
+        this.title = title;
+        this.description = description;
+        this.location = location;
+        this.capacity = capacity;
+        this.registrationDeadline = registrationDeadline;
+        this.startsAt = startsAt;
+        this.endsAt = endsAt;
+    }
+
     @PrePersist
     private void onCreate(){
         createdAt = Instant.now();
