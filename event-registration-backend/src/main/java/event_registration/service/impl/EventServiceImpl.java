@@ -3,10 +3,14 @@ package event_registration.service.impl;
 import event_registration.domain.Event;
 import event_registration.dto.request.EventRequest;
 import event_registration.dto.response.EventResponse;
+import event_registration.dto.response.PageResponse;
 import event_registration.exception.ResourceNotFoundException;
 import event_registration.mapper.EventMapper;
 import event_registration.repository.EventRepository;
 import event_registration.service.EventService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import event_registration.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -57,5 +61,34 @@ public class EventServiceImpl implements EventService {
                 );
 
         return eventMapper.toResponse(event);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<EventResponse> getEvents(int page, int size){
+        if(page < 0){
+            throw new BusinessException("頁碼不可小於0");
+        }
+
+        if(size < 1 || size > 100){
+            throw new BusinessException("每頁筆數必須介於 1 到 100");
+        }
+
+        PageRequest pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "id")
+        );
+
+        Page<EventResponse> result =eventRepository.findAll(pageable)
+                .map(eventMapper::toResponse);
+
+        return new PageResponse<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
     }
 }

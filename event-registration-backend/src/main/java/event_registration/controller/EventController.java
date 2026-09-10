@@ -2,6 +2,7 @@ package event_registration.controller;
 
 import event_registration.dto.request.EventRequest;
 import event_registration.dto.response.EventResponse;
+import event_registration.dto.response.PageResponse;
 import event_registration.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,5 +37,16 @@ public class EventController {
         EventResponse resposne = eventService.getEventById(id);
 
         return ResponseEntity.ok(resposne);
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<EventResponse>> getEvents(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PageResponse<EventResponse> response =
+                eventService.getEvents(page, size);
+
+        return ResponseEntity.ok(response);
     }
 }
