@@ -31,6 +31,13 @@ public class SecurityConfig {
                                 "/api/members"
                         ).permitAll()
 
+                        // 登入者可替自己報名，必須放在較廣泛的活動管理規則之前。
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/events/*/registrations"
+                        ).authenticated()
+
+                        // 其他活動 POST 操作仍限管理員，例如新增與發布。
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/events",
@@ -41,6 +48,7 @@ public class SecurityConfig {
                                 HttpMethod.PUT,
                                 "/api/events/**"
                         ).hasRole("ADMIN")
+
 
                         .anyRequest().authenticated()
 

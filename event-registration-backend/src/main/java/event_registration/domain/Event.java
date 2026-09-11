@@ -100,6 +100,19 @@ public class Event {
         this.endsAt = endsAt;
     }
 
+    /**
+     * 報名時必須是已發布活動，且尚未到達報名截止時間。
+     */
+    public void validateRegistration(Instant now){
+        if(status != EventStatus.PUBLISHED){
+            throw new BusinessException("只有已發布活動可以報名");
+        }
+
+        if(!registrationDeadline.isAfter(now)){
+            throw new BusinessException("報名已截止");
+        }
+    }
+
     @PrePersist
     private void onCreate(){
         createdAt = Instant.now();
