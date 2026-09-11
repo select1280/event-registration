@@ -6,4 +6,6 @@ import event_registration.dto.response.MemberResponse;
 public interface MemberService {
 
     MemberResponse register(RegisterRequest request);
+
+    MemberResponse getMemberByEmail(String email);
 }

@@ -4,6 +4,7 @@ import event_registration.domain.Member;
 import event_registration.dto.request.RegisterRequest;
 import event_registration.dto.response.MemberResponse;
 import event_registration.exception.BusinessException;
+import event_registration.exception.ResourceNotFoundException;
 import event_registration.mapper.MemberMapper;
 import event_registration.repository.MemberRepository;
 import event_registration.service.MemberService;
@@ -46,5 +47,17 @@ public class MemberServiceImpl implements MemberService {
         Member savedMember = memberRepository.save(member);
 
         return memberMapper.toResponse(savedMember);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MemberResponse getMemberByEmail(String email){
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+
+        Member member = memberRepository.findByEmail(normalizedEmail)
+                    .orElseThrow( () -> new ResourceNotFoundException("找不到會員")
+                );
+
+        return memberMapper.toResponse(member);
     }
 }
