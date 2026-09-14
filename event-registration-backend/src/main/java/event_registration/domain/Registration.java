@@ -4,7 +4,6 @@ import event_registration.domain.enums.RegistrationStatus;
 import event_registration.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.Instant;
 
@@ -56,5 +55,19 @@ public class Registration {
         this.member = member;
         this.event = event;
         this.registeredAt = now;
+    }
+
+    /**
+     * 取消有效報名並記錄取消時間
+     * 保留原紀錄，已取消的報名不可以再次取消。
+     */
+    public void cancell(Instant now){
+        //先檢查狀態，不符合就停止，避免修改任何欄位。
+        if(status != RegistrationStatus.REGISTERED){
+            throw new BusinessException("此報名已取消");
+        }
+
+        status = RegistrationStatus.CANCELLED;
+        cancelledAt = now;
     }
 }

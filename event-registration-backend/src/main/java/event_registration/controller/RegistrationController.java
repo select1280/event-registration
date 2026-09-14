@@ -33,4 +33,20 @@ public class RegistrationController {
 
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 取消目前登入會員在指定活動的報名，不接受前端指定會員身分。
+     */
+    @PostMapping("/{eventId}/registrations/cancel")
+    public ResponseEntity<RegistrationResponse> cancel(
+            @PathVariable("eventId") Long eventId,
+            Principal principal
+    ){
+        RegistrationResponse response = registrationService.cancel(
+                eventId,
+                principal.getName()
+        );
+
+        return ResponseEntity.ok(response);
+    }
 }

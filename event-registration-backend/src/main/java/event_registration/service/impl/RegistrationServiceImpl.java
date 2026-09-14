@@ -78,4 +78,32 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         return registrationMapper.toResponse(registration);
     }
+
+    /**
+     * 鎖定活動後，取消登入會員自己的報名。
+     * 與報名流程使用相同的鎖，協調名額變動。
+     */
+    @Override
+    @Transactional
+    public RegistrationResponse cancel(Long eventId, String email){
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+
+        Member member = memberRepository.findByEmail(normalizedEmail)
+                .orElseThrow( () -> new ResourceNotFoundException("找不到會員"));
+
+        //先鎖活動，再查詢及修改報名，與新增報名保持相同順序。
+        Event event = eventRepository.findByIdForUpdate(eventId)
+                .orElseThrow( () -> new ResourceNotFoundException("找不到活動，ID :" + eventId)
+                );
+
+        //會員與活動都必須符合避免操作別人的紀錄。
+        Registration registration = registrationRepository
+                .findByMember_IdAndEvent_Id(member.getId(), event.getId())
+                .orElseThrow( () -> new ResourceNotFoundException("找不到你的報名紀錄")
+                );
+
+        registration.cancell(Instant.now());
+
+        return registrationMapper.toResponse(registration);
+    }
 }
