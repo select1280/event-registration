@@ -5,6 +5,7 @@ import event_registration.domain.Event;
 import event_registration.domain.Member;
 import event_registration.domain.Registration;
 import event_registration.domain.enums.RegistrationStatus;
+import event_registration.dto.response.PageResponse;
 import event_registration.dto.response.RegistrationResponse;
 import event_registration.exception.BusinessException;
 import event_registration.exception.ResourceNotFoundException;
@@ -14,6 +15,9 @@ import event_registration.repository.MemberRepository;
 import event_registration.repository.RegistrationRepository;
 import event_registration.service.RegistrationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,5 +109,54 @@ public class RegistrationServiceImpl implements RegistrationService {
         registration.cancell(Instant.now());
 
         return registrationMapper.toResponse(registration);
+    }
+
+    /**
+     * 根據登入Email找出會於，再查詢其報名紀錄。
+     * 在唯獨交易內完成資料查詢與DTO轉換。
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RegistrationResponse> getMyRegistrations(
+            String email,
+            int page,
+            int size
+    ){
+        if(page < 0){
+            throw new BusinessException("頁碼不可以小於0");
+        }
+
+        if(size < 1 || size > 100){
+            throw new BusinessException("每頁筆數必須介於 1 到 100");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+
+        Member member = memberRepository.findByEmail(normalizedEmail)
+                .orElseThrow( () -> new ResourceNotFoundException("找不到會員")
+                );
+
+        //最近報名的紀錄優先;時間相同時，以唯一 ID 確保排序明確
+        PageRequest pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Order.desc("registeredAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        //Repository 的 EntityGraph 會載入 Mapper 所需的活動資料。
+        Page<RegistrationResponse> result = registrationRepository
+                .findByMember_Id(member.getId(), pageable)
+                .map(registrationMapper::toResponse);
+
+        return new PageResponse<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
     }
 }
