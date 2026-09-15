@@ -4,10 +4,9 @@ import event_registration.domain.enums.EventStatus;
 import event_registration.exception.BusinessException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.time.Instant;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class EventTest {
 
@@ -163,6 +162,61 @@ class EventTest {
         assertEquals(originalDeadline, event.getRegistrationDeadline());
         assertEquals(originalStartsAt, event.getStartsAt());
         assertEquals(originalEndsAt, event.getEndsAt());
+        assertEquals(EventStatus.PUBLISHED, event.getStatus());
+    }
+
+    /**
+     * 驗證已發布活動在截止前通過報名資格檢查。
+     * 檢查本身不應改變活動狀態。
+     */
+    @Test
+    void validateRegistration_shouldAllowBeforeDeadline() {
+        Event event = createDraftEvent();
+        event.publish(Instant.parse("2026-10-01T00:00:00Z"));
+
+        assertDoesNotThrow( () ->
+                event.validateRegistration(
+                        Instant.parse("2026-10-01T00:30:00Z")
+            )
+        );
+
+        assertEquals(EventStatus.PUBLISHED, event.getStatus());
+    }
+
+    /**
+     * 驗證已發布活動到達報名截止時間時拒絕報名。
+     * 先在截止前發布，確保測到的是截止規則，而非草稿限制。
+     */
+    @Test
+    void validateRegistration_shouldRejectAtDeadline() {
+        Event event = createDraftEvent();
+        event.publish(Instant.parse("2026-10-01T00:00:00Z"));
+
+        assertThrows(
+                BusinessException.class,
+                () -> event.validateRegistration(
+                        Instant.parse("2026-10-01T01:00:00Z")
+                )
+        );
+
+        assertEquals(EventStatus.PUBLISHED, event.getStatus());
+    }
+
+    /**
+     * 驗證已發布活動超過報名截止時間後一秒拒絕報名。
+     */
+    @Test
+    void validateRegistration_shouldRejectAfterDeadline() {
+        Event event = createDraftEvent();
+        event.publish(Instant.parse("2026-10-01T00:00:00Z"));
+
+        assertThrows(
+                BusinessException.class,
+                () -> event.validateRegistration(
+                        Instant.parse("2026-10-01T01:00:01Z")
+                )
+        );
+
         assertEquals(EventStatus.PUBLISHED, event.getStatus());
     }
 
