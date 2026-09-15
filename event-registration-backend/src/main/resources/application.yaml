@@ -19,7 +19,7 @@ spring:
     enabled: true
 
 server:
-  port: 8080
+  port: 8085
 
   # 暫時顯示 Security 除錯訊息，用來定位 403 原因。
   logging:

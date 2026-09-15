@@ -6,6 +6,7 @@ import event_registration.domain.Member;
 import event_registration.domain.Registration;
 import event_registration.domain.enums.RegistrationStatus;
 import event_registration.dto.response.PageResponse;
+import event_registration.dto.response.RegistrationAttendeeResponse;
 import event_registration.dto.response.RegistrationResponse;
 import event_registration.exception.BusinessException;
 import event_registration.exception.ResourceNotFoundException;
@@ -150,6 +151,54 @@ public class RegistrationServiceImpl implements RegistrationService {
         Page<RegistrationResponse> result = registrationRepository
                 .findByMember_Id(member.getId(), pageable)
                 .map(registrationMapper::toResponse);
+
+        return new PageResponse<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
+    }
+
+    /**
+     * 確認活動存在後，分頁查詢報名者資訊。
+     * 在唯獨交易內完成查詢與 DTO 轉換。
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RegistrationAttendeeResponse> getEventRegistrations(
+            Long eventId,
+            int page,
+            int size
+    ){
+        if(page < 0){
+            throw new BusinessException("頁碼不可小於0");
+        }
+
+        if(size < 1 || size > 100){
+            throw new BusinessException("每頁筆數必須介於 1 到 100");
+        }
+
+        //區分「活動不存在」與「活動存在但沒有人報名」。
+        if(!eventRepository.existsById(eventId)){
+            throw new ResourceNotFoundException("找不到活動， ID :" + eventId);
+        }
+
+        //最近報名的紀錄優先，ID 作為時間相同時的排序依據。
+        PageRequest pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Order.desc("registeredAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        // EntityGraph 會載入 Mapper 所需的會員資料。
+        Page<RegistrationAttendeeResponse> result = registrationRepository
+                .findByMember_Id(eventId, pageable)
+                .map(registrationMapper::toAttendeeResponse);
 
         return new PageResponse<>(
                 result.getContent(),

@@ -50,6 +50,12 @@ public class SecurityConfig {
                                 "/api/events/**"
                         ).hasRole("ADMIN")
 
+                        // 報名名單包含會員姓名與 Email，僅允許管理員查詢。
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/events/*/registrations"
+                        ).hasRole("ADMIN")
+
 
                         .anyRequest().authenticated()
 

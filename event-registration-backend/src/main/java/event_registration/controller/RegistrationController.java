@@ -1,13 +1,12 @@
 package event_registration.controller;
 
+import event_registration.dto.response.PageResponse;
+import event_registration.dto.response.RegistrationAttendeeResponse;
 import event_registration.dto.response.RegistrationResponse;
 import event_registration.service.RegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -46,6 +45,26 @@ public class RegistrationController {
                 eventId,
                 principal.getName()
         );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 分頁查詢指定活動的報名名單。
+     * 此端點由 SecurityConfig 限制只有管理員可以存取。
+     */
+    @GetMapping("/{eventId}/registrations")
+    public ResponseEntity<PageResponse<RegistrationAttendeeResponse>> getEventRegistrations(
+            @PathVariable("eventId") Long eventId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10")int size
+    ){
+        PageResponse<RegistrationAttendeeResponse> response =
+                registrationService.getEventRegistrations(
+                        eventId,
+                        page,
+                        size
+                );
 
         return ResponseEntity.ok(response);
     }
