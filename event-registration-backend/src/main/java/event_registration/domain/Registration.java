@@ -61,7 +61,7 @@ public class Registration {
      * 取消有效報名並記錄取消時間
      * 保留原紀錄，已取消的報名不可以再次取消。
      */
-    public void cancell(Instant now){
+    public void cancel(Instant now){
         //先檢查狀態，不符合就停止，避免修改任何欄位。
         if(status != RegistrationStatus.REGISTERED){
             throw new BusinessException("此報名已取消");

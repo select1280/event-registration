@@ -107,7 +107,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .orElseThrow( () -> new ResourceNotFoundException("找不到你的報名紀錄")
                 );
 
-        registration.cancell(Instant.now());
+        registration.cancel(Instant.now());
 
         return registrationMapper.toResponse(registration);
     }
