@@ -197,7 +197,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         // EntityGraph 會載入 Mapper 所需的會員資料。
         Page<RegistrationAttendeeResponse> result = registrationRepository
-                .findByMember_Id(eventId, pageable)
+                .findByEvent_Id(eventId, pageable)
                 .map(registrationMapper::toAttendeeResponse);
 
         return new PageResponse<>(

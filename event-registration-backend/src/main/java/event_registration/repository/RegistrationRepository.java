@@ -2,6 +2,7 @@ package event_registration.repository;
 
 import event_registration.domain.Registration;
 import event_registration.domain.enums.RegistrationStatus;
+import jakarta.persistence.Entity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -30,6 +31,16 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     @EntityGraph(attributePaths = "event")
     Page<Registration> findByMember_Id(
             Long memberId,
+            Pageable pageable
+    );
+
+    /**
+     * 分頁查詢指定活動的報名名單，包含已取消紀錄。
+     * 同時載入會員資料，供管理員查看姓名與 Email。
+     */
+    @EntityGraph(attributePaths = "member")
+    Page<Registration> findByEvent_Id(
+            Long eventId,
             Pageable pageable
     );
 
