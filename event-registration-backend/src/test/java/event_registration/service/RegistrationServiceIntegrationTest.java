@@ -7,6 +7,7 @@ import event_registration.domain.Registration;
 import event_registration.domain.enums.RegistrationStatus;
 import event_registration.dto.response.RegistrationResponse;
 import event_registration.exception.BusinessException;
+import event_registration.exception.ResourceNotFoundException;
 import event_registration.repository.EventRepository;
 import event_registration.repository.MemberRepository;
 import event_registration.repository.RegistrationRepository;
@@ -241,6 +242,68 @@ public class RegistrationServiceIntegrationTest {
                     "測試執行緒應正常結束"
             );
         }
+    }
+
+    /**
+     * A 沒有報名、B 已報名時，A 不能取消 B 的紀錄
+     * 被拒絕後，B 的狀態與有效報名人數都應保持不變。
+     */
+    @Test
+    void cancel_shouldNotCancelAnotherMembersRegistration(){
+        String emailA = "a-" + UUID.randomUUID() + "@example.com";
+        String emailB = "b-" + UUID.randomUUID() + "@example.com";
+
+        memberRepository.save(
+                new Member(emailA, "unused-test-hash", "會員A")
+        );
+
+        Member member = memberRepository.save(
+                new Member(emailB, "unused-test-hash", "會員B")
+        );
+
+        Instant now = Instant.now();
+
+        Event event = new Event(
+                "取消權限測試",
+                "驗證不能取消別人的報名",
+                "線上",
+                1,
+                now.plus(1, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)
+        );
+
+        event.publish(now);
+        Long eventId = eventRepository.save(event).getId();
+
+        //只有 B 報名，A 沒有這場活動的報名紀錄。
+        RegistrationResponse responseB =
+                registrationService.register(eventId, emailB);
+
+        //用A 的身分別取消，應找不到屬於 A 的紀錄。
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> registrationService.cancel(eventId, emailA)
+        );
+
+        assertEquals("找不到你的報名紀錄", exception.getMessage());
+
+        //重新查詢資料庫，確認 B 的報名沒有受到影響。
+        Registration savedB = registrationRepository
+                .findByMember_IdAndEvent_Id(member.getId(), eventId)
+                .orElseThrow();
+
+        assertEquals(responseB.id(), savedB.getId());
+        assertEquals(RegistrationStatus.REGISTERED, savedB.getStatus());
+        assertNull(savedB.getCancelledAt());
+
+        assertEquals(
+                1L,
+                registrationRepository.countByEvent_IdAndStatus(
+                        eventId,
+                        RegistrationStatus.REGISTERED
+                )
+        );
     }
 
     /**
