@@ -1,6 +1,7 @@
 package event_registration.service.impl;
 
 import event_registration.domain.Event;
+import event_registration.domain.enums.EventStatus;
 import event_registration.dto.request.EventRequest;
 import event_registration.dto.response.EventResponse;
 import event_registration.dto.response.PageResponse;
@@ -127,4 +128,54 @@ public class EventServiceImpl implements EventService {
 
         return eventMapper.toResponse(event);
     }
+
+    /**
+     * 在資料庫依已發布狀態分頁，確保內容與總筆數使用相同條件。
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<EventResponse> getPublishedEvents(int page, int size){
+        if(page < 0){
+            throw new BusinessException("頁碼不可小於0");
+        }
+
+        if(size < 1 || size > 100){
+            throw new BusinessException("每頁筆數必須介於 1 到 100");
+        }
+
+        PageRequest pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "id")
+        );
+
+        Page<EventResponse> result = eventRepository
+                .findByStatus(EventStatus.PUBLISHED, pageable)
+                .map(eventMapper::toResponse);
+
+        return new PageResponse<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
+    }
+
+    /**
+     * 將活動 ID 與已發布狀態一起查詢，避免透過 ID 取得草稿。
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public EventResponse getPublishedEventById(Long id){
+        Event event = eventRepository
+                .findByIdAndStatus(id, EventStatus.PUBLISHED)
+                .orElseThrow( () ->
+                        new ResourceNotFoundException("找不到活動，ID :" + id)
+                );
+
+        return eventMapper.toResponse(event);
+    }
+
+
 }

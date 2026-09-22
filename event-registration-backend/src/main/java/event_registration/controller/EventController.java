@@ -30,22 +30,24 @@ public class EventController {
             return ResponseEntity.created(location).body(response);
     }
 
+    /** 查詢已發布活動，草稿與不存在的活動都回傳 */
     @GetMapping("/{id}")
     public ResponseEntity<EventResponse> getEventById(
             @PathVariable("id") Long id
     ){
-        EventResponse resposne = eventService.getEventById(id);
+        EventResponse resposne = eventService.getPublishedEventById(id);
 
         return ResponseEntity.ok(resposne);
     }
 
+    /** 分頁列出已發布活鄧 */
     @GetMapping
     public ResponseEntity<PageResponse<EventResponse>> getEvents(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ){
         PageResponse<EventResponse> response =
-                eventService.getEvents(page, size);
+                eventService.getPublishedEvents(page, size);
 
         return ResponseEntity.ok(response);
     }

@@ -56,6 +56,8 @@ public class SecurityConfig {
                                 "/api/events/*/registrations"
                         ).hasRole("ADMIN")
 
+                        // 管理端路徑統一要求 ADMIN 角色。
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
 

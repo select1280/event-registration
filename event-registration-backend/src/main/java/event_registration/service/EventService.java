@@ -15,4 +15,14 @@ public interface EventService {
     EventResponse publishEvent(Long id);
 
     EventResponse updateEvent(Long id, EventRequest request);
+
+    /**
+     * 分頁查詢已發布活動，供會員瀏覽。
+     */
+    PageResponse<EventResponse> getPublishedEvents(int page, int size);
+
+    /**
+     * 查詢指定的已發布活動 ; 不存在或非已發布狀態時回報查無資料。
+     */
+    EventResponse getPublishedEventById(Long id);
 }
