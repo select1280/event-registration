@@ -97,6 +97,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- 提供 Spring Boot 的 Security 測試整合，支援 MockMvc 模擬登入身分。 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
