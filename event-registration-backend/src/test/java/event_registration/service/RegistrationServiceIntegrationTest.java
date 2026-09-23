@@ -5,6 +5,7 @@ import event_registration.domain.Event;
 import event_registration.domain.Member;
 import event_registration.domain.Registration;
 import event_registration.domain.enums.RegistrationStatus;
+import event_registration.dto.response.EventAvailabilityResponse;
 import event_registration.dto.response.RegistrationResponse;
 import event_registration.exception.BusinessException;
 import event_registration.exception.ResourceNotFoundException;
@@ -39,6 +40,9 @@ public class RegistrationServiceIntegrationTest {
 
     @Autowired
     private RegistrationRepository registrationRepository;
+
+    @Autowired
+    private EventService eventService;
 
     /**
      * 呼叫真實報名 Service，確認交易提交後能從資料庫查到有效報名。
@@ -304,6 +308,54 @@ public class RegistrationServiceIntegrationTest {
                         RegistrationStatus.REGISTERED
                 )
         );
+    }
+
+    /**
+     * 兩位會員報名後，其中一位取消。
+     * 名額查詢應只計算有效報名，取消的紀錄不占名額。
+     */
+    @Test
+    void getAvailability_shouldExclaudeCancelledRegistrations(){
+        String emailA = "a-" + UUID.randomUUID() + "@example.com";
+        String emailB = "b-" + UUID.randomUUID() + "@example.com";
+
+        memberRepository.save(
+                new Member(emailA, "unused-test-hash", "會員A")
+        );
+
+        memberRepository.save(
+                new Member(emailB, "unused-test-hash", "會員B")
+        );
+
+        Instant now = Instant.now();
+
+        //建立容量為 3 人、尚未截止的已發布活動。
+        Event event = new Event(
+                "名額查詢測試",
+                "驗證取消的報名不占名額",
+                "線上",
+                3,
+                now.plus(1, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)
+        );
+
+        event.publish(now);
+        Long eventId = eventRepository.save(event).getId();
+
+        //兩位會員先報名，再由 B 取消，保留 A 的有效報名。
+        registrationService.register(eventId, emailA);
+        registrationService.register(eventId, emailB);
+        registrationService.cancel(eventId, emailB);
+
+        //呼叫真正的名額查詢 Service，驗證回傳的數值。
+        EventAvailabilityResponse response =
+                eventService.getAvailability(eventId);
+
+        assertEquals(eventId, response.eventId());
+        assertEquals(3, response.capacity());
+        assertEquals(1L, response.registeredCount());
+        assertEquals(2L, response.remainingCapacity());
     }
 
     /**
