@@ -2,12 +2,15 @@ package event_registration.service.impl;
 
 import event_registration.domain.Event;
 import event_registration.domain.enums.EventStatus;
+import event_registration.domain.enums.RegistrationStatus;
 import event_registration.dto.request.EventRequest;
+import event_registration.dto.response.EventAvailabilityResponse;
 import event_registration.dto.response.EventResponse;
 import event_registration.dto.response.PageResponse;
 import event_registration.exception.ResourceNotFoundException;
 import event_registration.mapper.EventMapper;
 import event_registration.repository.EventRepository;
+import event_registration.repository.RegistrationRepository;
 import event_registration.service.EventService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +28,7 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
+    private final RegistrationRepository registrationRepository;
 
     @Override
     @Transactional
@@ -195,5 +199,33 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toResponse(event);
     }
 
+    /**
+     * 查詢已發布活動的有效報名人數與剩餘名額。
+     * 此結果僅供顯示，實際報名仍須在取得活動鎖後重新檢查。
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public EventAvailabilityResponse getAvailability(Long eventId) {
+        // 限定已發布活動，避免透過名額端點查到草稿資訊。
+        Event event = eventRepository
+                .findByIdAndStatus(eventId, EventStatus.PUBLISHED)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("找不到活動，ID：" + eventId)
+                );
 
+        // 已取消的紀錄不占名額，因此只計算 REGISTERED。
+        long registeredCount = registrationRepository.countByEvent_IdAndStatus(
+                eventId,
+                RegistrationStatus.REGISTERED
+        );
+
+        long remainingCapacity = event.getCapacity() - registeredCount;
+
+        return new EventAvailabilityResponse(
+                event.getId(),
+                event.getCapacity(),
+                registeredCount,
+                remainingCapacity
+        );
+    }
 }

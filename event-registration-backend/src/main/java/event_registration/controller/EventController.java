@@ -1,12 +1,13 @@
 package event_registration.controller;
 
 import event_registration.dto.request.EventRequest;
+import event_registration.dto.response.EventAvailabilityResponse;
 import event_registration.dto.response.EventResponse;
 import event_registration.dto.response.PageResponse;
 import event_registration.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
+import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,6 +52,16 @@ public class EventController {
         EventResponse resposne = eventService.getPublishedEventById(id);
 
         return ResponseEntity.ok(resposne);
+    }
+
+    /** 查詢已發布活動目前的報名人數與剩餘名額 */
+    @GetMapping("{id}/availability")
+    public ResponseEntity<EventAvailabilityResponse> getAvailability(
+            @PathVariable("id") Long id
+    ){
+        EventAvailabilityResponse response = eventService.getAvailability(id);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/publish")
