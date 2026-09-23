@@ -36,4 +36,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Long id,
             EventStatus status
     );
+
+    /**
+     * 依活動狀態與標題關鍵字分頁查詢。
+     * 標題採部分符合，英文不區分大小寫。
+     */
+    Page<Event> findByStatusAndTitleContainingIgnoreCase(
+            EventStatus status,
+            String keyword,
+            Pageable pageable
+    );
 }

@@ -17,9 +17,13 @@ public interface EventService {
     EventResponse updateEvent(Long id, EventRequest request);
 
     /**
-     * 分頁查詢已發布活動，供會員瀏覽。
+     * 分頁查詢已發布活動，可依標題關鍵字搜尋。
      */
-    PageResponse<EventResponse> getPublishedEvents(int page, int size);
+    PageResponse<EventResponse> getPublishedEvents(
+            String ketyword,
+            int page,
+            int size
+            );
 
     /**
      * 查詢指定的已發布活動 ; 不存在或非已發布狀態時回報查無資料。

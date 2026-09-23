@@ -130,11 +130,12 @@ public class EventServiceImpl implements EventService {
     }
 
     /**
-     * 在資料庫依已發布狀態分頁，確保內容與總筆數使用相同條件。
+     * 關鍵字有內容時搜尋標題;未提供或只有空白時列出全部已發布活動。
+     * 狀態與搜尋條件在資料庫套用，確保分頁總筆數正確。
      */
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<EventResponse> getPublishedEvents(int page, int size){
+    public PageResponse<EventResponse> getPublishedEvents(String keyword, int page, int size){
         if(page < 0){
             throw new BusinessException("頁碼不可小於0");
         }
@@ -143,15 +144,32 @@ public class EventServiceImpl implements EventService {
             throw new BusinessException("每頁筆數必須介於 1 到 100");
         }
 
+        String normalizedkeyword = keyword == null ? "" : keyword.strip();
+
         PageRequest pageable = PageRequest.of(
                 page,
                 size,
                 Sort.by(Sort.Direction.DESC, "id")
         );
 
-        Page<EventResponse> result = eventRepository
-                .findByStatus(EventStatus.PUBLISHED, pageable)
-                .map(eventMapper::toResponse);
+        Page<Event> events;
+
+        if(normalizedkeyword.isEmpty()){
+            //沒有搜尋條件，沿用原本的已發布活動查詢。
+            events = eventRepository.findByStatus(
+                    EventStatus.PUBLISHED,
+                    pageable
+            );
+        } else{
+            //狀態固定為 PUBLISHED，會員不能透過搜尋取得草稿。
+            events = eventRepository.findByStatusAndTitleContainingIgnoreCase(
+                    EventStatus.PUBLISHED,
+                    normalizedkeyword,
+                    pageable
+            );
+        }
+
+        Page<EventResponse> result = events.map(eventMapper::toResponse);
 
         return new PageResponse<>(
                 result.getContent(),

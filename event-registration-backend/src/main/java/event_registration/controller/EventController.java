@@ -30,6 +30,19 @@ public class EventController {
             return ResponseEntity.created(location).body(response);
     }
 
+    /** 分頁列出已發布活鄧 */
+    @GetMapping
+    public ResponseEntity<PageResponse<EventResponse>> getEvents(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PageResponse<EventResponse> response =
+                eventService.getPublishedEvents(keyword, page, size);
+
+        return ResponseEntity.ok(response);
+    }
+
     /** 查詢已發布活動，草稿與不存在的活動都回傳 */
     @GetMapping("/{id}")
     public ResponseEntity<EventResponse> getEventById(
@@ -38,18 +51,6 @@ public class EventController {
         EventResponse resposne = eventService.getPublishedEventById(id);
 
         return ResponseEntity.ok(resposne);
-    }
-
-    /** 分頁列出已發布活鄧 */
-    @GetMapping
-    public ResponseEntity<PageResponse<EventResponse>> getEvents(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
-    ){
-        PageResponse<EventResponse> response =
-                eventService.getPublishedEvents(page, size);
-
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/publish")
