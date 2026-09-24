@@ -126,4 +126,44 @@ class RegistrationSecurityTest {
 
         assertEquals(EventStatus.PUBLISHED, savedEvent.getStatus());
     }
+
+    /**
+     * 管理員帶有有效 CSRF token 時可以取消活動
+     * 回應與資料庫中的活動狀態都應為 CANCELLED
+     */
+    @Test
+    @WithMockUser(
+            username = "admin@xeample.com",
+            roles = "ADMIN"
+    )
+    void cancelEvent_shouldAllowAdmin() throws Exception{
+            Instant now = Instant.now();
+
+            Event event = new Event(
+                    "管理員取消活動測試",
+                    "驗管理員可取消活動",
+                    "縣上",
+                    10,
+                    now.plus(1, ChronoUnit.DAYS),
+                    now.plus(2, ChronoUnit.DAYS),
+                    now.plus(2, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)
+            );
+
+            event.publish(now);
+            Long eventId = eventRepository.save(event).getId();
+
+            //管理員身分發送請求，驗證 HTTP 狀態與回應內容。
+            mockMvc.perform(
+                    post("/api/admin/events/{eventId}/cancel", eventId)
+                            .with(csrf())
+            )
+
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+            //重新讀取資料庫，確認取消結果確實儲存。
+        Event savedEvent = eventRepository.findById(eventId).orElseThrow();
+
+        assertEquals(EventStatus.CANCELLED, savedEvent.getStatus());
+    }
 }
