@@ -1,6 +1,7 @@
 package event_registration.service.impl;
 
 import event_registration.domain.Event;
+import event_registration.domain.Registration;
 import event_registration.domain.enums.EventStatus;
 import event_registration.domain.enums.RegistrationStatus;
 import event_registration.dto.request.EventRequest;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -227,5 +229,36 @@ public class EventServiceImpl implements EventService {
                 registeredCount,
                 remainingCapacity
         );
+    }
+
+    /**
+     * 在同一筆交易中取消活動與有效報名。
+     * 沿用報名流程的活動鎖，避免取消期間有新報名插入。
+     */
+    @Override
+    @Transactional
+    public EventResponse cancelEvent(Long eventId){
+        //先取得活動鎖，與同一活動的報名交易依序執行。
+        Event event = eventRepository.findByIdForUpdate(eventId)
+                .orElseThrow( () ->
+                        new ResourceNotFoundException("找不到活動，ID :" + eventId)
+                );
+
+        //取得鎖後再取時間，避免等待期間活動已開始。
+        Instant now = Instant.now();
+        event.cancel(now);
+
+        //只處理有效報名，保留先前已取消紀錄的取消時間。
+        List<Registration> registrations =
+                registrationRepository.findByEvent_IdAndStatus(
+                        eventId,
+                        RegistrationStatus.REGISTERED
+                );
+
+        for(Registration registration : registrations){
+            registration.cancel(now);
+        }
+
+        return eventMapper.toResponse(event);
     }
 }

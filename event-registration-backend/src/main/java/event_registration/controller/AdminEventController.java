@@ -38,4 +38,17 @@ public class AdminEventController {
                 eventService.getEventById(id)
         );
     }
+
+    /**
+     * 管理員取消活動，並同步取消有效報名。
+     * 活動與報名紀錄都會保留。
+     */
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<EventResponse> cancelEvent(
+            @PathVariable("id") Long id
+    ){
+        EventResponse response = eventService.cancelEvent(id);
+
+        return ResponseEntity.ok(response);
+    }
 }

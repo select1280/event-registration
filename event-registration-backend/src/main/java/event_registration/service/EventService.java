@@ -36,4 +36,7 @@ public interface EventService {
      * 查詢已發布活動的名額資訊，草稿或不存在的活動回報查無資料。
      */
     EventAvailabilityResponse getAvailability(Long eventId);
+
+    /** 取消活動，並同步取消仍然有效的報名。 */
+    EventResponse cancelEvent(Long eventId);
 }

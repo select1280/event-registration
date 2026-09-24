@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RegistrationRepository extends JpaRepository<Registration, Long> {
@@ -42,6 +43,15 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     Page<Registration> findByEvent_Id(
             Long eventId,
             Pageable pageable
+    );
+
+    /**
+     * 查詢指定活動、指定狀態的全部報名。
+     * 取消活動時，用來取得仍然有效的報名紀錄。
+     */
+    List<Registration> findByEvent_IdAndStatus(
+            Long eventId,
+            RegistrationStatus status
     );
 
 }

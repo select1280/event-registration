@@ -78,6 +78,23 @@ public class Event {
         status = EventStatus.PUBLISHED;
     }
 
+    /**
+     *取消尚未開始的活動，保留活動資料。
+     * 已取消或已開始的活動不可再次取消。
+     */
+    public void cancel(Instant now){
+        if(status == EventStatus.CANCELLED){
+            throw new BusinessException("活動已取消");
+        }
+
+        //開始時間等於現在，也視為活動已開始。
+        if(!startsAt.isAfter(now)){
+            throw new BusinessException("活動已開始，無法取消");
+        }
+
+        status = EventStatus.CANCELLED;
+    }
+
     public void updateDetails(
             String title,
             String description,
