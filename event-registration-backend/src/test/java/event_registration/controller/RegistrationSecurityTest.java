@@ -2,6 +2,7 @@ package event_registration.controller;
 
 import event_registration.config.TestDatabaseConfig;
 import event_registration.domain.Event;
+import event_registration.domain.enums.EventStatus;
 import event_registration.repository.EventRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ import java.time.temporal.ChronoUnit;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -84,5 +88,42 @@ class RegistrationSecurityTest {
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isEmpty())
                 .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    /**
+     * 一般會員即使帶有有效 CSRF token，也不能取消活動。
+     * 請求被拒絕後，活動應維持已發布狀態。
+     */
+    @Test
+    @WithMockUser(
+            username = "member@example.com",
+            roles = "MEMBER"
+    )
+    void cancelEvent_shouldRejectMember() throws Exception{
+        Instant now = Instant.now();
+
+        Event event = new Event(
+                "取消活動權限測試",
+                "驗證一般會員不可取消活動",
+                "線上",
+                10,
+                now.plus(1, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)
+        );
+
+        event.publish(now);
+        Long eventId = eventRepository.save(event).getId();
+
+        //帶入有效 CSRF token，避免因缺少 token 而得到 403。
+        mockMvc.perform(
+                post("/api/admin/events/{eventId}/cancel", eventId)
+                        .with(csrf())
+        ).andExpect(status().isForbidden());
+
+        //重新查詢資料庫，確認被拒絕的操作沒有取消活動。
+        Event savedEvent = eventRepository.findById(eventId).orElseThrow();
+
+        assertEquals(EventStatus.PUBLISHED, savedEvent.getStatus());
     }
 }
