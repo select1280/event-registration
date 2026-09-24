@@ -4,6 +4,7 @@ import event_registration.config.TestDatabaseConfig;
 import event_registration.domain.Event;
 import event_registration.domain.Member;
 import event_registration.domain.Registration;
+import event_registration.domain.enums.EventStatus;
 import event_registration.domain.enums.RegistrationStatus;
 import event_registration.dto.response.EventAvailabilityResponse;
 import event_registration.dto.response.RegistrationResponse;
@@ -384,5 +385,90 @@ public class RegistrationServiceIntegrationTest {
             assertEquals("活動名額已滿", exception.getMessage());
             return false;
         }
+    }
+
+    /**
+     * 取消活動同步取消有效報名，
+     * 並保留先前已取消報名的原始取消時間。
+     */
+    @Test
+    void cancelEvent_shouldCancelActiveRegistrationsAndPreserveCancelledTime(){
+        Member memberA =memberRepository.save(
+                new Member(
+                        "a-" + UUID.randomUUID() + "@example.com",
+                        "unused-test-hasg",
+                        "會員A"
+                )
+        );
+
+        Member memberB = memberRepository.save(
+                new Member(
+                        "b-" + UUID.randomUUID() + "@example.com",
+                        "unused-tst-hash",
+                        "會員B"
+                )
+        );
+
+        Instant now = Instant.now();
+
+        Event event = new Event(
+                "取消活動測試",
+                "驗證報名狀態與取消時間",
+                "線上",
+                3,
+                now.plus(1, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS),
+                now.plus(2, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)
+        );
+
+        event.publish(now);
+        event = eventRepository.save(event);
+
+        //A 保持有效報名
+        Registration active = registrationRepository.save(
+                new Registration(memberA, event, now.minusSeconds(120))
+        );
+
+        //建立 B 已在一分鐘前取消的紀錄，與本次取消時間明確區隔。
+        Registration cancelled = new Registration(
+                memberB, event, now.minusSeconds(120)
+        );
+
+        cancelled.cancel(now.minusSeconds(60));
+        cancelled = registrationRepository.save(cancelled);
+
+        //從資料庫取得原始時間，避免資料庫時間精度差異影響比較。
+        Instant originalCancelledAt = registrationRepository
+                .findById(cancelled.getId())
+                .orElseThrow()
+                .getCancelledAt();
+
+        //呼叫真正的 Service，完成取消活動的交易。
+        eventService.cancelEvent(event.getId());
+
+        //交易完成後重新查詢，確認變更確實寫入資料庫。
+        Event savedEvent = eventRepository.findById(event.getId()).orElseThrow();
+
+        Registration savedA = registrationRepository
+                .findById(active.getId()).orElseThrow();
+
+        Registration savedB = registrationRepository
+                .findById(cancelled.getId()).orElseThrow();
+
+        assertEquals(EventStatus.CANCELLED, savedEvent.getStatus());
+
+        assertEquals(RegistrationStatus.CANCELLED, savedA.getStatus());
+        assertNotNull(savedA.getCancelledAt());
+
+        assertEquals(RegistrationStatus.CANCELLED, savedB.getStatus());
+        assertEquals(originalCancelledAt, savedB.getCancelledAt());
+
+        assertEquals(
+                0L,
+                registrationRepository.countByEvent_IdAndStatus(
+                        event.getId(),
+                        RegistrationStatus.REGISTERED
+                )
+        );
     }
 }
