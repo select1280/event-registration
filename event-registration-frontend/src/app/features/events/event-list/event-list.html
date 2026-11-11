@@ -16,7 +16,7 @@
       <hr />
     </article>
   } @empty {
-    <p>目前沒有已發布的活動。</p>
+    <p>目前沒有符合條件的已發布活動。</p>
   }
 }
 
@@ -38,3 +38,16 @@
     </button>
   </nav>
 }
+
+<!-- 送出時套用關鍵字，並回到搜尋結果的第一頁。 -->
+<form (ngSubmit)="onSearch()">
+  <label for="keyword">活動標題</label>
+  <input
+    id="keyword"
+    type="search"
+    [formControl]="keywordControl"
+    placeholder="輸入活動標題關鍵字"
+  />
+
+  <button type="submit" [disabled]="loading()">搜尋</button>
+</form>
