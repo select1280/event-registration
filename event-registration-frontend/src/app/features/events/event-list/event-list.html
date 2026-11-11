@@ -1,0 +1,40 @@
+<h1>活動列表</h1>
+
+<!-- 依查詢狀態，顯示載入提示、錯誤或活動內容。 -->
+@if (loading()) {
+  <p role="status">活動載入中…</p>
+} @else if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+  <button type="button" (click)="loadEvents()">重新載入</button>
+} @else {
+  @for (event of events(); track event.id) {
+    <article>
+      <h2>{{ event.title }}</h2>
+      <p>{{ event.description }}</p>
+      <p>地點：{{ event.location }}</p>
+      <p>活動名額：{{ event.capacity }} 人</p>
+      <hr />
+    </article>
+  } @empty {
+    <p>目前沒有已發布的活動。</p>
+  }
+}
+
+<!-- 查詢成功且有資料時，顯示頁碼與分頁操作。 -->
+@if (!loading() && !errorMessage() && totalPages() > 0) {
+  <nav aria-label="活動列表分頁">
+    <p>共 {{ totalElements() }} 筆活動， 第 {{ currentPage() + 1 }} / {{ totalPages() }} 頁</p>
+
+    <button type="button" [disabled]="currentPage() === 0" (click)="loadEvents(currentPage() - 1)">
+      上一頁
+    </button>
+
+    <button
+      type="button"
+      [disabled]="currentPage() + 1 >= totalPages()"
+      (click)="loadEvents(currentPage() + 1)"
+    >
+      下一頁
+    </button>
+  </nav>
+}

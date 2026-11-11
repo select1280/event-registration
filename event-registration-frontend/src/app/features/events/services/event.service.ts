@@ -1,0 +1,26 @@
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { PageResponse } from '../../../core/models/page-response';
+import { EventResponse } from '../models/event-response';
+
+@Injectable({
+    providedIn: 'root',
+})
+export class EventService {
+    private readonly http = inject(HttpClient);
+
+    /** 分頁查詢已發布活動，頁碼從 0 開始。 */
+    getEvents(
+        page: number = 0,
+        size: number = 10
+    ): Observable<PageResponse<EventResponse>> {
+        const params = new HttpParams()
+            .set('page', page)
+            .set('size', size);
+
+        return this.http.get<PageResponse<EventResponse>>('/api/events', {
+            params,
+        });
+    }
+}

@@ -2,7 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -14,6 +15,7 @@ import { finalize } from 'rxjs';
 export class Login {
 
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   //使用 signal 管理畫面狀態，更新時會反映到模板。
   readonly submitting = signal(false);
@@ -50,21 +52,25 @@ export class Login {
 
     this.authService.login(email, password)
       .pipe(
-        //成功或失敗都恢復按鈕狀態
+        // 登入成功後，再利用 Session 查詢目前登入者。
+        switchMap(() => this.authService.getCurrentMember()),
+        // 等登入與會員查詢全部結束，才恢復按鈕。
         finalize(() => this.submitting.set(false))
       )
       .subscribe({
         next: () => {
-          this.message.set('登入成功!');
           this.loginForm.controls.password.reset();
+
+          //登入與會員查詢都成功後，切換到活動列表。
+          void this.router.navigate(['/events']);
         },
         error: (error: HttpErrorResponse) => {
           this.message.set(
             error.status === 401
-              ? 'Email 或密碼錯誤。'
-              : '登入失敗，請稍後再試。'
-          )
-        }
-      })
+              ? '登入驗證失敗，請確認帳密或重新登入。'
+              : '登入流程發生錯誤，請稍後再試。'
+          );
+        },
+      });
   }
 }
