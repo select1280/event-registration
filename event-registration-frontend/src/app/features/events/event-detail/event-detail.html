@@ -14,8 +14,17 @@
       <dt>地點</dt>
       <dd>{{ detail.location }}</dd>
 
-      <dt>活動名額</dt>
-      <dd>{{ detail.capacity }} 人</dd>
+      <!-- 有取得名額資料時，顯示容量、有效報名人數與剩餘名額。 -->
+      @if (availability(); as seats) {
+        <dt>活動名額</dt>
+        <dd>{{ seats.capacity }} 人</dd>
+
+        <dt>已報名人數</dt>
+        <dd>{{ seats.registeredCount }} 人</dd>
+
+        <dt>剩餘名額</dt>
+        <dd>{{ seats.remainingCapacity }} 人</dd>
+      }
 
       <dt>報名截止時間</dt>
       <dd>{{ detail.registrationDeadline | date: 'yyyy-MM-dd HH:mm' }}</dd>
@@ -26,5 +35,7 @@
       <dt>活動結束時間</dt>
       <dd>{{ detail.endsAt | date: 'yyyy-MM-dd HH:mm' }}</dd>
     </dl>
+
+    <p>名額資訊以查詢當下為準，實際報名結果由送出時確認。</p>
   </article>
 }

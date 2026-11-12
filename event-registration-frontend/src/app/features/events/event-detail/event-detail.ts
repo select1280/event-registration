@@ -1,10 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
-import { EventResponse } from '../models/event-response';
+import { finalize, forkJoin } from 'rxjs';
+import { EventResponse, EventAvailabilityResponse } from '../models/event-response';
 import { EventService } from '../services/event.service';
 import { DatePipe } from '@angular/common';
+
 
 @Component({
   selector: 'app-event-detail',
@@ -24,6 +25,9 @@ export class EventDetail implements OnInit {
   readonly loading = signal(false);
   readonly errorMessage = signal('');
 
+  //儲存目前查到的名額資訊，尚未取得時為null。
+  readonly availability = signal<EventAvailabilityResponse | null>(null);
+
   /** 讀取網址中的活動 ID，驗證後查詢詳細資料。 */
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -35,14 +39,19 @@ export class EventDetail implements OnInit {
 
     this.loading.set(true);
 
-    this.eventService.getEventById(id)
+    //同時查詢活動與名額，兩者都成功才顯示完整資訊。
+    forkJoin({
+      detail: this.eventService.getEventById(id),
+      availability: this.eventService.getAvailability(id),
+    })
       .pipe(
         // 不論查詢成功或失敗，都結束載入狀態。
         finalize(() => this.loading.set(false))
       )
       .subscribe({
         next: (response) => {
-          this.event.set(response);
+          this.event.set(response.detail);
+          this.availability.set(response.availability);
         },
         error: (error: HttpErrorResponse) => {
           this.errorMessage.set(

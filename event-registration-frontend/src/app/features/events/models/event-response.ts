@@ -11,3 +11,11 @@ export interface EventResponse {
     endsAt: string;
     createdAt: string;
 }
+
+/** 活動名額的查詢快照，不代表替使用者保留名額。 */
+export interface EventAvailabilityResponse {
+    eventId: number;
+    capacity: number;
+    registeredCount: number;
+    remainingCapacity: number;
+}
