@@ -37,5 +37,13 @@
     </dl>
 
     <p>名額資訊以查詢當下為準，實際報名結果由送出時確認。</p>
+
+    <!-- 報名請求進行中停用按鈕，避免重複送出。 -->
+    <button type="button" [disabled]="registering()" (click)="register()">
+      {{ registering() ? '報名中…' : '報名活動' }}
+    </button>
+
+    <!-- 顯示報名成功或失敗訊息。 -->
+    <p role="status">{{ registrationMessage() }}</p>
   </article>
 }
