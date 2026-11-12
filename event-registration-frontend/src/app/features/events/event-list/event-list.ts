@@ -3,10 +3,14 @@ import { EventResponse } from '../models/event-response';
 import { EventService } from '../services/event.service';
 import { finalize } from 'rxjs';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-event-list',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+  ],
   templateUrl: './event-list.html',
   styleUrl: './event-list.scss',
 })

@@ -1,0 +1,30 @@
+<a routerLink="/events">回活動列表</a>
+
+<!-- 依查詢狀態顯示提示；取得資料後才讀取活動欄位。 -->
+@if (loading()) {
+  <p role="status">活動載入中…</p>
+} @else if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+} @else if (event(); as detail) {
+  <article>
+    <h1>{{ detail.title }}</h1>
+    <p>{{ detail.description }}</p>
+
+    <dl>
+      <dt>地點</dt>
+      <dd>{{ detail.location }}</dd>
+
+      <dt>活動名額</dt>
+      <dd>{{ detail.capacity }} 人</dd>
+
+      <dt>報名截止時間</dt>
+      <dd>{{ detail.registrationDeadline | date: 'yyyy-MM-dd HH:mm' }}</dd>
+
+      <dt>活動開始時間</dt>
+      <dd>{{ detail.startsAt | date: 'yyyy-MM-dd HH:mm' }}</dd>
+
+      <dt>活動結束時間</dt>
+      <dd>{{ detail.endsAt | date: 'yyyy-MM-dd HH:mm' }}</dd>
+    </dl>
+  </article>
+}

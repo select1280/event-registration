@@ -32,4 +32,9 @@ export class EventService {
             params,
         });
     }
+
+    /**依活動 ID 查詢已發布活動，草稿或不存在的活動會回傳404 */
+    getEventById(id: number): Observable<EventResponse> {
+        return this.http.get<EventResponse>(`/api/events/${id}`);
+    }
 }

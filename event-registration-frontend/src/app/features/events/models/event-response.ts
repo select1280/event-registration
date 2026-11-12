@@ -7,7 +7,7 @@ export interface EventResponse {
     capacity: number;
     status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
     registrationDeadline: string;
-    startAt: string;
-    endAt: string;
+    startsAt: string;
+    endsAt: string;
     createdAt: string;
 }

@@ -1,5 +1,18 @@
 <h1>活動列表</h1>
 
+<!-- 送出時套用關鍵字，並回到搜尋結果的第一頁。 -->
+<form (ngSubmit)="onSearch()">
+  <label for="keyword">活動標題</label>
+  <input
+    id="keyword"
+    type="search"
+    [formControl]="keywordControl"
+    placeholder="輸入活動標題關鍵字"
+  />
+
+  <button type="submit" [disabled]="loading()">搜尋</button>
+</form>
+
 <!-- 依查詢狀態，顯示載入提示、錯誤或活動內容。 -->
 @if (loading()) {
   <p role="status">活動載入中…</p>
@@ -9,7 +22,13 @@
 } @else {
   @for (event of events(); track event.id) {
     <article>
-      <h2>{{ event.title }}</h2>
+      <h2>
+        <!-- event 是這次迴圈正在顯示的單筆活動。 -->
+        <a [routerLink]="['/events', event.id]">
+          {{ event.title }}
+        </a>
+      </h2>
+
       <p>{{ event.description }}</p>
       <p>地點：{{ event.location }}</p>
       <p>活動名額：{{ event.capacity }} 人</p>
@@ -38,16 +57,3 @@
     </button>
   </nav>
 }
-
-<!-- 送出時套用關鍵字，並回到搜尋結果的第一頁。 -->
-<form (ngSubmit)="onSearch()">
-  <label for="keyword">活動標題</label>
-  <input
-    id="keyword"
-    type="search"
-    [formControl]="keywordControl"
-    placeholder="輸入活動標題關鍵字"
-  />
-
-  <button type="submit" [disabled]="loading()">搜尋</button>
-</form>
