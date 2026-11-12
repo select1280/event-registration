@@ -43,4 +43,21 @@ export class RegistrationService {
             { params }
         );
     }
+
+    /** 取消目前登入者的報名，保留紀錄並更新取消時間。 */
+    cancel(eventId: number): Observable<RegistrationResponse> {
+        return this.authService.getCsrfToken().pipe(
+            switchMap((csrf) =>
+                this.http.post<RegistrationResponse>(
+                    `/api/events/${eventId}/registrations/cancel`,
+                    null,
+                    {
+                        headers: {
+                            [csrf.headerName]: csrf.token,
+                        },
+                    }
+                )
+            )
+        )
+    };
 }

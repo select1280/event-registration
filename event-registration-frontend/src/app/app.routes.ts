@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Login } from './features/auth/login/login';
 import { EventList } from './features/events/event-list/event-list';
 import { EventDetail } from './features/events/event-detail/event-detail';
+import { MyRegistrations } from './features/registrations/my-registrations/my-registrations';
 
 export const routes: Routes = [
     //首頁自動導向登入頁，只有完整路徑才套用。
@@ -24,5 +25,9 @@ export const routes: Routes = [
     {
         path: 'events/:id',
         component: EventDetail,
+    },
+    {
+        path: 'my-registrations',
+        component: MyRegistrations,
     }
 ];

@@ -1,0 +1,75 @@
+<!-- 個人報名頁，下一段串接查詢 API。 -->
+<h1>我的報名</h1>
+<a routerLink="/events">回活動列表</a>
+<!-- 操作結果獨立顯示，不影響原本的報名列表。 -->
+<p role="status">{{ actionMessage() }}</p>
+
+<!-- 依查詢狀態顯示提示或報名紀錄-->
+@if (loading()) {
+  <p role="status">報名紀錄載入中...</p>
+} @else if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+  <button type="button" (click)="loadRegistrations()">重新載入</button>
+} @else {
+  @for (registration of registrations(); track registration.id) {
+    <article>
+      <h2>{{ registration.eventTitle }}</h2>
+
+      <p>
+        狀態:
+        {{ registration.status === 'REGISTERED' ? '已報名' : '已取消' }}
+      </p>
+
+      <p>
+        報名時間:
+        {{ registration.registeredAt | date: 'yyyy-MM-dd HH:mm' }}
+      </p>
+
+      <!-- 有取消時間才顯示，避免有效報名出現空白欄位-->
+      @if (registration.cancelledAt) {
+        <p>
+          取消時間:
+          {{ registration.cancelledAt | date: 'yyyy-MM-dd HH:mm' }}
+        </p>
+      }
+
+      <!-- 只有有效報名可以取消；請求期間停用所有取消按鈕。 -->
+      @if (registration.status === 'REGISTERED') {
+        <button
+          type="button"
+          [disabled]="cancellingId() !== null"
+          (click)="cancelRegistration(registration)"
+        >
+          {{ cancellingId() === registration.id ? '取消中…' : '取消報名' }}
+        </button>
+      }
+
+      <hr />
+    </article>
+  } @empty {
+    <p>目前沒有報名紀錄</p>
+  }
+}
+
+<!-- 有資料且查詢成功時，提供分頁操作-->
+@if (!loading() && !errorMessage() && totalPages() > 0) {
+  <nav aria-label="我的報名分頁">
+    <p>共{{ totalElements() }}筆記錄， 第{{ currentPage() + 1 }}/{{ totalPages() }}頁</p>
+
+    <button
+      type="button"
+      [disabled]="currentPage() === 0 || cancellingId() !== null"
+      (click)="loadRegistrations(currentPage() - 1)"
+    >
+      上一頁
+    </button>
+
+    <button
+      type="button"
+      [disabled]="currentPage() + 1 >= totalPages() || cancellingId() !== null"
+      (click)="loadRegistrations(currentPage() + 1)"
+    >
+      下一頁
+    </button>
+  </nav>
+}
