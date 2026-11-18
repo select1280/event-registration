@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, switchMap } from 'rxjs';
 import { CsrfToken } from '../models/csrf-token';
 import { MemberResponse } from '../models/member-response';
+import { RegisterRequest } from '../models/register-request';
 
 @Injectable({
     providedIn: 'root',
@@ -43,6 +44,19 @@ export class AuthService {
         return this.getCsrfToken().pipe(
             switchMap((csrf) =>
                 this.http.post<void>('/api/auth/logout', null, {
+                    headers: {
+                        [csrf.headerName]: csrf.token,
+                    },
+                })
+            )
+        );
+    }
+
+    /** 取得CSRF token 後， 以 JSON 送出註冊資料。 */
+    register(request: RegisterRequest): Observable<MemberResponse> {
+        return this.getCsrfToken().pipe(
+            switchMap((csrf) =>
+                this.http.post<MemberResponse>('/api/members', request, {
                     headers: {
                         [csrf.headerName]: csrf.token,
                     },
