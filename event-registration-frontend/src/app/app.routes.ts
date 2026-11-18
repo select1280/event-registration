@@ -5,6 +5,8 @@ import { EventDetail } from './features/events/event-detail/event-detail';
 import { MyRegistrations } from './features/registrations/my-registrations/my-registrations';
 import { authGuard } from './core/guards/auth.guard';
 import { Register } from './features/auth/register/register';
+import { adminGuard } from './core/guards/admin.guard';
+import { AdminEventList } from './features/admin/admin-event-list/admin-event-list';
 
 export const routes: Routes = [
     //首頁自動導向登入頁，只有完整路徑才套用。
@@ -41,4 +43,9 @@ export const routes: Routes = [
         path: 'register',
         component: Register
     },
+    {
+        path: 'admin/events',
+        component: AdminEventList,
+        canActivate: [adminGuard],
+    }
 ];

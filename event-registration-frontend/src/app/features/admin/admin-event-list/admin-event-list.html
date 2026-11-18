@@ -1,0 +1,58 @@
+<h1>活動管理</h1>
+<a routerLink="/events">回會員活動列表</a>
+
+<!-- 管理員可查看全部狀態的活動。-->
+@if (loading()) {
+  <p role="status">活動載入中</p>
+} @else if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+  <button type="button" (click)="loadEvents()">重新載入</button>
+} @else {
+  @for (event of events(); track event.id) {
+    <article>
+      <h2>{{ event.id }}</h2>
+      <p>活動 ID:{{ event.id }}</p>
+      <p>地點:{{ event.location }}</p>
+      <p>活動名額:{{ event.capacity }}</p>
+
+      <!-- 將後端狀態轉成中文標示 -->
+      <p>
+        狀態:
+        @switch (event.status) {
+          @case ('DRAFT') {
+            草稿
+          }
+          @case ('PUBLISHED') {
+            已發布
+          }
+          @case ('CANCELLED') {
+            已取消
+          }
+        }
+      </p>
+
+      <hr />
+    </article>
+  } @empty {
+    <p>目前沒有活動</p>
+  }
+}
+
+<!-- 查詢成功且有資料時，提供分頁操作-->
+@if (!loading() && !errorMessage() && totalPages() > 0) {
+  <nav aria-label="活動管理分頁">
+    <p>共{{ totalElements() }}筆活動， 第{{ currentPage() + 1 }} / {{ totalPages() }}頁</p>
+
+    <button type="button" [disabled]="currentPage() === 0" (click)="loadEvents(currentPage() - 1)">
+      上一頁
+    </button>
+
+    <button
+      type="button"
+      [disabled]="currentPage() + 1 >= totalPages()"
+      (click)="loadEvents(currentPage() + 1)"
+    >
+      下一頁
+    </button>
+  </nav>
+}
