@@ -7,6 +7,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { Register } from './features/auth/register/register';
 import { adminGuard } from './core/guards/admin.guard';
 import { AdminEventList } from './features/admin/admin-event-list/admin-event-list';
+import { AdminEventCreate } from './features/admin/admin-event-create/admin-event-create';
 
 export const routes: Routes = [
     //首頁自動導向登入頁，只有完整路徑才套用。
@@ -47,5 +48,10 @@ export const routes: Routes = [
         path: 'admin/events',
         component: AdminEventList,
         canActivate: [adminGuard],
-    }
+    },
+    {
+        path: 'admin/events/new',
+        component: AdminEventCreate,
+        canActivate: [adminGuard],
+    },
 ];

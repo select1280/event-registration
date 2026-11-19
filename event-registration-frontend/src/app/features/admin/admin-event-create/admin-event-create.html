@@ -1,0 +1,89 @@
+<h1>新增活動</h1>
+<p>儲存後將建立為草稿。</p>
+<a routerLink="/admin/events">回活動管理</a>
+
+<!-- 綁定活動表單，送出時先驗證欄位。 -->
+<form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+  <div>
+    <label for="title">活動名稱</label>
+    <input id="title" type="text" formControlName="title" maxlength="120" />
+
+    @if (eventForm.controls.title.touched && eventForm.controls.title.invalid) {
+      <p>請輸入活動名稱，不可全部空白，最多 120 字。</p>
+    }
+  </div>
+
+  <div>
+    <label for="description">活動說明</label>
+    <textarea id="description" formControlName="description" rows="4"></textarea>
+
+    @if (eventForm.controls.description.touched && eventForm.controls.description.invalid) {
+      <p>請輸入活動說明，不可全部空白。</p>
+    }
+  </div>
+
+  <div>
+    <label for="location">活動地點</label>
+    <input id="location" type="text" formControlName="location" maxlength="255" />
+
+    @if (eventForm.controls.location.touched && eventForm.controls.location.invalid) {
+      <p>請輸入活動地點，不可全部空白，最多 255 字。</p>
+    }
+  </div>
+
+  <div>
+    <label for="capacity">活動名額</label>
+    <input
+      id="capacity"
+      type="number"
+      formControlName="capacity"
+      min="1"
+      max="2147483647"
+      step="1"
+    />
+
+    @if (eventForm.controls.capacity.touched && eventForm.controls.capacity.invalid) {
+      <p>請輸入 1～2147483647 之間的整數。</p>
+    }
+  </div>
+
+  <!-- 日期欄位使用瀏覽器本地時間，送出前再轉成 UTC。 -->
+  <p>以下時間依目前瀏覽器所在時區填寫。</p>
+
+  <div>
+    <label for="registrationDeadline">報名截止時間</label>
+    <input id="registrationDeadline" type="datetime-local" formControlName="registrationDeadline" />
+
+    @if (
+      eventForm.controls.registrationDeadline.touched &&
+      eventForm.controls.registrationDeadline.invalid
+    ) {
+      <p>請填寫報名截止時間。</p>
+    }
+  </div>
+
+  <div>
+    <label for="startsAt">活動開始時間</label>
+    <input id="startsAt" type="datetime-local" formControlName="startsAt" />
+
+    @if (eventForm.controls.startsAt.touched && eventForm.controls.startsAt.invalid) {
+      <p>請填寫活動開始時間。</p>
+    }
+  </div>
+
+  <div>
+    <label for="endsAt">活動結束時間</label>
+    <input id="endsAt" type="datetime-local" formControlName="endsAt" />
+
+    @if (eventForm.controls.endsAt.touched && eventForm.controls.endsAt.invalid) {
+      <p>請填寫活動結束時間。</p>
+    }
+  </div>
+
+  <!-- 儲存期間停用按鈕，避免重複建立活動。 -->
+  <button type="submit" [disabled]="submitting()">
+    {{ submitting() ? '儲存中...' : '儲存草稿' }}
+  </button>
+  <!-- 顯示日期檢查或儲存結果。 -->
+  <p role="status">{{ message() }}</p>
+</form>

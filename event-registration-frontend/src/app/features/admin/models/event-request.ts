@@ -3,7 +3,7 @@ export interface EventRequest {
     title: string;
     description: string;
     location: string;
-    capcacity: number;
+    capacity: number;
     registrationDeadline: string;
     startsAt: string;
     endsAt: string;

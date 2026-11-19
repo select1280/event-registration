@@ -1,4 +1,5 @@
 <h1>活動管理</h1>
+<p><a routerLink="/admin/events/new">新增活動</a></p>
 <a routerLink="/events">回會員活動列表</a>
 
 <!-- 管理員可查看全部狀態的活動。-->
@@ -10,7 +11,7 @@
 } @else {
   @for (event of events(); track event.id) {
     <article>
-      <h2>{{ event.id }}</h2>
+      <h2>{{ event.title }}</h2>
       <p>活動 ID:{{ event.id }}</p>
       <p>地點:{{ event.location }}</p>
       <p>活動名額:{{ event.capacity }}</p>
